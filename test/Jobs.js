@@ -104,38 +104,24 @@ describe('test/helpers/Anchor', function() {
 
   let Package = require('../index');
 
-  it('should get source block average time', function() {
-    this.timeout(10 * 1000);
+  it('should run the job', function() {
+    this.timeout(60 * 60 * 1000);
     let sourceWeb3 = web3;
     let destinationWeb3 = web3;
     let address = caAnchor;
     let worker = orgOwner;
-    let confirmations = 1;
-    let oAnchor = new Package.Anchor(sourceWeb3, destinationWeb3, address, worker, confirmations);
-    return oAnchor.getSourceAverageBlockGenerationTime().then(function(avgTime) {
-      console.log('avgTime', avgTime);
+    let oJob = new Package.Job(sourceWeb3, destinationWeb3, address, worker);
+    return oJob.execute(20).on('StateRootAvailable', function(receipt) {
+      validateReceipt(receipt);
     });
   });
-
-  it('should validate anchor', function() {
-    this.timeout(10 * 1000);
-    let sourceWeb3 = web3;
-    let destinationWeb3 = web3;
-    let address = caAnchor;
-    let worker = orgOwner;
-    let confirmations = 1;
-    let oAnchor = new Package.Anchor(sourceWeb3, destinationWeb3, address, worker, confirmations);
-    return oAnchor.validate();
-  });
-
-  it('should commit state root', function() {
-    this.timeout(60 * 1000);
-    let sourceWeb3 = web3;
-    let destinationWeb3 = web3;
-    let address = caAnchor;
-    let worker = orgOwner;
-    let confirmations = 1;
-    let oAnchor = new Package.Anchor(sourceWeb3, destinationWeb3, address, worker, confirmations);
-    return oAnchor.commitStateRoot().then(validateReceipt);
-  });
 });
+
+// Go easy on RPC Client (Geth)
+(function() {
+  let maxHttpScokets = 5;
+  let httpModule = require('http');
+  httpModule.globalAgent.keepAlive = true;
+  httpModule.globalAgent.keepAliveMsecs = 30 * 60 * 1000;
+  httpModule.globalAgent.maxSockets = maxHttpScokets;
+})();
