@@ -15,15 +15,9 @@ const web3 = new Web3(config.gethRpcEndPoint);
 let web3WalletHelper = new Web3WalletHelper(web3);
 
 //Contract Address. TBD: Do not forget to set caOrganization && caAnchor = null below.
-// let caOrganization = null;
-// let caAnchor = null;
-// let coreChainId = null;
-// let orgOwner = config.deployerAddress;
-// let orgWorker = config.organizationWorker;
-
-let caOrganization = '0x77dE44cACfAaB4deCc91F67400cb4537CD1C1d93';
-let caAnchor = '0x73D2B0221EB8b67b267B7Cd3Dd4eA7dFd18BCCD4';
-let coreChainId = 1000;
+let caOrganization = null;
+let caAnchor = null;
+let coreChainId = null;
 let orgOwner = config.deployerAddress;
 let orgWorker = config.organizationWorker;
 
@@ -111,7 +105,7 @@ describe('test/helpers/Anchor', function() {
     let address = caAnchor;
     let worker = orgOwner;
     let oJob = new Package.Job(sourceWeb3, destinationWeb3, address, worker);
-    return oJob.execute(20).on('StateRootAvailable', function(receipt) {
+    return oJob.execute().on('StateRootAvailable', function(receipt) {
       validateReceipt(receipt);
     });
   });
