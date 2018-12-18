@@ -5,11 +5,13 @@ const chai = require('chai'),
   Web3 = require('web3'),
   MosaicTbd = require('mosaic-tbd'),
   OrganizationHelper = MosaicTbd.ChainSetup.OrganizationHelper,
-  AnchorHelper = MosaicTbd.ChainSetup.SafeCoreHelper,
+  AnchorHelper = MosaicTbd.ChainSetup.AnchorHelper,
   assert = chai.assert;
 
-const config = require('../test/utils/configReader'),
-  Web3WalletHelper = require('../test/utils/Web3WalletHelper');
+const Package = require('../../index');
+
+const config = require('../../test/utils/configReader'),
+  Web3WalletHelper = require('../../test/utils/Web3WalletHelper');
 
 const web3 = new Web3(config.gethRpcEndPoint);
 let web3WalletHelper = new Web3WalletHelper(web3);
@@ -18,8 +20,9 @@ let web3WalletHelper = new Web3WalletHelper(web3);
 let caOrganization = null;
 let caAnchor = null;
 let coreChainId = null;
+//TBD - When contract is ready, please change below addresses.
 let orgOwner = config.deployerAddress;
-let orgWorker = config.organizationWorker;
+let orgWorker = config.deployerAddress;
 
 let validateReceipt = (receipt) => {
   assert.isNotNull(receipt, 'Transaction Receipt is null');
@@ -35,7 +38,7 @@ let validateDeploymentReceipt = (receipt) => {
   assert.isTrue(web3.utils.isAddress(contractAddress), 'Invalid contractAddress in Receipt');
   return receipt;
 };
-describe('test/helpers/Anchor', function() {
+describe('test/libs/Anchor', function() {
   let deployParams = {
     from: config.deployerAddress,
     gasPrice: config.gasPrice
@@ -63,10 +66,10 @@ describe('test/helpers/Anchor', function() {
         if (!caOrganization) {
           console.log('* Setting up Organization');
           let orgHelper = new OrganizationHelper(web3, caOrganization);
-          //FIND_ME_WHEN_UPDATING_CONTRACTS. worker should be orgWorker. Setting to orgOwner as a temporary measure.
           const orgConfig = {
             deployer: config.deployerAddress,
-            worker: orgOwner
+            owner: orgOwner,
+            workers: [orgWorker]
           };
           return orgHelper.setup(orgConfig).then(function() {
             caOrganization = orgHelper.address;
@@ -85,7 +88,7 @@ describe('test/helpers/Anchor', function() {
               initialBlockHeight = block.number;
               initialStateRoot = block.stateRoot;
               return helper
-                .deploy(coreChainId, initialBlockHeight, initialStateRoot, caOrganization, deployParams)
+                .deploy(coreChainId, initialBlockHeight, initialStateRoot, 10, caOrganization, deployParams)
                 .then(validateDeploymentReceipt)
                 .then((receipt) => {
                   caAnchor = receipt.contractAddress;
@@ -96,8 +99,6 @@ describe('test/helpers/Anchor', function() {
         return _out;
       });
   });
-
-  let Package = require('../index');
 
   it('should validate anchor', function() {
     this.timeout(10 * 1000);

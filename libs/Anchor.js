@@ -3,7 +3,7 @@
 const Web3 = require('web3');
 const MosaicTbd = require('mosaic-tbd');
 const AbiBinProvider = MosaicTbd.AbiBinProvider;
-const ContractName = 'SafeCore';
+const ContractName = 'Anchor';
 
 class Anchor {
   constructor(sourceWeb3, destinationWeb3, anchor, organization, confirmations, options) {
@@ -79,7 +79,7 @@ class Anchor {
     }
 
     return promiseChain.then(function(block) {
-      let tx = contract.methods.commitStateRoot(block.number, block.stateRoot);
+      let tx = contract.methods.anchorStateRoot(block.number, block.stateRoot);
       console.log('* Committing stateRoot at blockHeight', block.number);
       return tx
         .send(txOptions)
@@ -149,15 +149,13 @@ class Anchor {
           throw error;
         }
         console.log('\t - validating organization address');
-        return contract.methods.membersManager().call();
+        return contract.methods.organization().call();
       })
-      .then(function(membersManager) {
+      .then(function(organizationContract) {
         let abiBinProvider = new AbiBinProvider();
         let jsonInterface = abiBinProvider.getABI('organization');
-        let orgContract = new destinationWeb3.eth.Contract(jsonInterface, membersManager);
-
-        //FIND_ME_WHEN_UPDATING_CONTRACTS
-        return orgContract.methods.isWorker(organization).call();
+        let orgContract = new destinationWeb3.eth.Contract(jsonInterface, organizationContract);
+        return orgContract.methods.isOrganization(organization).call();
       })
       .then(function(flag) {
         if (!flag) {
