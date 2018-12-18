@@ -63,6 +63,7 @@ describe('test/helpers/Anchor', function() {
         if (!caOrganization) {
           console.log('* Setting up Organization');
           let orgHelper = new OrganizationHelper(web3, caOrganization);
+          //FIND_ME_WHEN_UPDATING_CONTRACTS. worker should be orgWorker. Setting to orgOwner as a temporary measure.
           const orgConfig = {
             deployer: config.deployerAddress,
             worker: orgOwner
@@ -98,27 +99,14 @@ describe('test/helpers/Anchor', function() {
 
   let Package = require('../index');
 
-  it('should get source block average time', function() {
-    this.timeout(10 * 1000);
-    let sourceWeb3 = web3;
-    let destinationWeb3 = web3;
-    let address = caAnchor;
-    let worker = orgOwner;
-    let confirmations = 1;
-    let oAnchor = new Package.Anchor(sourceWeb3, destinationWeb3, address, worker, confirmations);
-    return oAnchor.getSourceAverageBlockGenerationTime().then(function(avgTime) {
-      console.log('avgTime', avgTime);
-    });
-  });
-
   it('should validate anchor', function() {
     this.timeout(10 * 1000);
     let sourceWeb3 = web3;
     let destinationWeb3 = web3;
     let address = caAnchor;
-    let worker = orgOwner;
+    let organization = orgOwner;
     let confirmations = 1;
-    let oAnchor = new Package.Anchor(sourceWeb3, destinationWeb3, address, worker, confirmations);
+    let oAnchor = new Package.Anchor(sourceWeb3, destinationWeb3, address, organization, confirmations);
     return oAnchor.validate();
   });
 
@@ -127,9 +115,17 @@ describe('test/helpers/Anchor', function() {
     let sourceWeb3 = web3;
     let destinationWeb3 = web3;
     let address = caAnchor;
-    let worker = orgOwner;
+    let organization = orgOwner;
     let confirmations = 1;
-    let oAnchor = new Package.Anchor(sourceWeb3, destinationWeb3, address, worker, confirmations);
-    return oAnchor.commitStateRoot().then(validateReceipt);
+    let oAnchor = new Package.Anchor(sourceWeb3, destinationWeb3, address, organization, confirmations);
+    return oAnchor.anchorStateRoot().then(validateReceipt);
   });
 });
+// Go easy on RPC Client (Geth)
+(function() {
+  let maxHttpScokets = 5;
+  let httpModule = require('http');
+  httpModule.globalAgent.keepAlive = true;
+  httpModule.globalAgent.keepAliveMsecs = 30 * 60 * 1000;
+  httpModule.globalAgent.maxSockets = maxHttpScokets;
+})();

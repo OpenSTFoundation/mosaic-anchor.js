@@ -6,7 +6,7 @@ const AbiBinProvider = MosaicTbd.AbiBinProvider;
 const ContractName = 'SafeCore';
 
 class Anchor {
-  constructor(sourceWeb3, destinationWeb3, anchor, worker, confirmations, options) {
+  constructor(sourceWeb3, destinationWeb3, anchor, organization, confirmations, options) {
     const oThis = this;
 
     if (typeof sourceWeb3 === 'string') {
@@ -34,12 +34,12 @@ class Anchor {
       throw err;
     }
 
-    oThis.worker = worker;
+    oThis.organization = organization;
     options = Object.assign(
       {
         gasPrice: '0x5B9ACA00',
         gas: '5000000',
-        from: worker
+        from: organization
       },
       options || {}
     );
@@ -51,20 +51,20 @@ class Anchor {
     oThis.contract = new destinationWeb3.eth.Contract(jsonInterface, anchor, options);
   }
 
-  commitStateRoot(block, txOptions) {
+  anchorStateRoot(block, txOptions) {
     const oThis = this;
 
     txOptions = Object.assign(
       {
         gasPrice: '0x5B9ACA00',
         gas: '1000000',
-        from: oThis.worker
+        from: oThis.organization
       },
       txOptions || {}
     );
 
     if (!txOptions.from || !Web3.utils.isAddress(txOptions.from)) {
-      let err = new Error("Mandatory Parameter 'worker' is missing or invalid.");
+      let err = new Error("Mandatory Parameter 'organization' is missing or invalid.");
       return Promise.reject(err);
     }
 
@@ -131,7 +131,7 @@ class Anchor {
     let sourceWeb3 = oThis.sourceWeb3;
     let destinationWeb3 = oThis.destinationWeb3;
     let contract = oThis.contract;
-    let worker = oThis.worker;
+    let organization = oThis.organization;
 
     let sourceChainId;
     console.log('* Validating anchor');
@@ -148,100 +148,26 @@ class Anchor {
           console.log('\t !! Error !!', error, '\n\t !! ERROR !!\n');
           throw error;
         }
-        console.log('\t - validating worker address');
+        console.log('\t - validating organization address');
         return contract.methods.membersManager().call();
       })
       .then(function(membersManager) {
         let abiBinProvider = new AbiBinProvider();
         let jsonInterface = abiBinProvider.getABI('organization');
         let orgContract = new destinationWeb3.eth.Contract(jsonInterface, membersManager);
-        return orgContract.methods.isWorker(worker).call();
+
+        //FIND_ME_WHEN_UPDATING_CONTRACTS
+        return orgContract.methods.isWorker(organization).call();
       })
       .then(function(flag) {
         if (!flag) {
-          let error = new Error('Invalid worker address.');
+          let error = new Error('Invalid organization address.');
           console.log('\t !! Error !!', error, '\n\t !! ERROR !!\n');
           throw error;
         }
         console.log('\t - all validations done');
         return true;
       });
-  }
-
-  getSourceAverageBlockGenerationTime() {
-    const oThis = this;
-
-    let web3 = oThis.sourceWeb3;
-    return web3.eth.getBlockNumber().then(function(currentBlockNumber) {
-      currentBlockNumber = Number(currentBlockNumber);
-      let confirmations = oThis.confirmations;
-
-      let totalBlocksToFetch = confirmations * 2;
-      let endBlock = currentBlockNumber - confirmations;
-      let startBlock = endBlock - totalBlocksToFetch;
-
-      //
-      //  Create a batch request to fetch last 100 blocks
-      //  and Calculate avg block generation time.
-      //
-
-      let calculatorPromise = new Promise(function(resolve, reject) {
-        console.log('inside calculatorPromise');
-
-        let blocks = [];
-        let calculator = function() {
-          if (blocks.length < 2) {
-            let error = new Error('Failed to fetch blocks');
-            reject(error);
-            return;
-          }
-          let len = blocks.length;
-          let totalTime = 0;
-          let cnt = 0;
-          for (cnt = 0; cnt < len; cnt++) {
-            if (cnt === 0) {
-              continue;
-            }
-            let currentBlock = blocks[cnt];
-            let prevBlock = blocks[cnt - 1];
-            totalTime = totalTime + Number(currentBlock.timestamp) - Number(prevBlock.timestamp);
-          }
-          let avgTime = Math.ceil(totalTime / (len - 1));
-          resolve({
-            currentBlockNumber: currentBlockNumber,
-            averageBlockGenerationTime: avgTime,
-            totalTime: totalTime,
-            blocks: blocks
-          });
-          return;
-        };
-
-        //Fetch the blocks.
-
-        let batch = new web3.BatchRequest();
-        let isCalculatorScheduled = false;
-        console.log('Building batch request');
-        for (let cnt = 0; cnt < totalBlocksToFetch; cnt++) {
-          let blockNum = startBlock + cnt;
-          let _request = web3.eth.getBlock.request(blockNum);
-          _request.callback = function(err, block) {
-            if (block) {
-              blocks.push(block);
-            }
-            if (!isCalculatorScheduled) {
-              //We have received batch response.
-              //Schedule the time calculator.
-              setTimeout(calculator, 0);
-              isCalculatorScheduled = true;
-            }
-          };
-          batch.add(_request);
-        }
-        batch.execute();
-      });
-
-      return calculatorPromise;
-    });
   }
 
   static get DEFAULT_CONFIRMATIONS() {

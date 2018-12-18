@@ -63,6 +63,7 @@ describe('test/helpers/Anchor', function() {
         if (!caOrganization) {
           console.log('* Setting up Organization');
           let orgHelper = new OrganizationHelper(web3, caOrganization);
+          //FIND_ME_WHEN_UPDATING_CONTRACTS. worker should be orgWorker. Setting to orgOwner as a temporary measure.
           const orgConfig = {
             deployer: config.deployerAddress,
             worker: orgOwner
@@ -97,14 +98,26 @@ describe('test/helpers/Anchor', function() {
   });
 
   let Package = require('../index');
+  let Job = Package.Job;
+
+  it('should compute block generation time', function() {
+    this.timeout(10 * 1000);
+    let sourceWeb3 = web3;
+    let noOfBlocks = 100;
+    let confirmations = 24;
+
+    return Job.getAverageBlockGenerationInfo(web3, 100, 24).then(function(info) {
+      console.log('average block generation info', info);
+    });
+  });
 
   it('should run the job', function() {
     this.timeout(60 * 60 * 1000);
     let sourceWeb3 = web3;
     let destinationWeb3 = web3;
     let address = caAnchor;
-    let worker = orgOwner;
-    let oJob = new Package.Job(sourceWeb3, destinationWeb3, address, worker);
+    let organization = orgOwner;
+    let oJob = new Job(sourceWeb3, destinationWeb3, address, organization);
     return oJob.execute().on('StateRootAvailable', function(receipt) {
       validateReceipt(receipt);
     });
