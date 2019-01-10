@@ -44,6 +44,7 @@ class Anchor {
       options || {}
     );
 
+    oThis.txOptions = options;
     oThis.confirmations = confirmations || Anchor.DEFAULT_CONFIRMATIONS;
 
     let abiBinProvider = new AbiBinProvider();
@@ -60,6 +61,7 @@ class Anchor {
         gas: '1000000',
         from: oThis.organization
       },
+      oThis.txOptions || {},
       txOptions || {}
     );
 

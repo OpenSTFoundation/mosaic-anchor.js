@@ -22,7 +22,7 @@ let caAnchor = null;
 let coreChainId = null;
 //TBD - When contract is ready, please change below addresses.
 let orgOwner = config.deployerAddress;
-let orgWorker = config.deployerAddress;
+let orgWorker = config.organizationWorker;
 
 let validateReceipt = (receipt) => {
   assert.isNotNull(receipt, 'Transaction Receipt is null');
