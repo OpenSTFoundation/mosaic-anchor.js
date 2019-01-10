@@ -65,6 +65,35 @@ class Anchor {
       txOptions || {}
     );
 
+    return oThis._anchorStateRoot(block, txOptions).then(function(tx) {
+      return tx
+        .send(txOptions)
+        .on('transactionHash', function(transactionHash) {
+          console.log('\t - transaction hash:', transactionHash);
+        })
+        .on('receipt', function(receipt) {
+          console.log('\t - Receipt:\n\x1b[2m', JSON.stringify(receipt), '\x1b[0m\n');
+        })
+        .on('error', function(error) {
+          console.log('\t !! Error !!', error, '\n\t !! ERROR !!\n');
+          return Promise.reject(error);
+        });
+    });
+  }
+
+  _anchorStateRoot(block, txOptions) {
+    const oThis = this;
+
+    txOptions = Object.assign(
+      {
+        gasPrice: '0x5B9ACA00',
+        gas: '1000000',
+        from: oThis.organization
+      },
+      oThis.txOptions || {},
+      txOptions || {}
+    );
+
     if (!txOptions.from || !Web3.utils.isAddress(txOptions.from)) {
       let err = new Error("Mandatory Parameter 'organization' is missing or invalid.");
       return Promise.reject(err);
@@ -82,19 +111,7 @@ class Anchor {
 
     return promiseChain.then(function(block) {
       let tx = contract.methods.anchorStateRoot(block.number, block.stateRoot);
-      console.log('* Committing stateRoot at blockHeight', block.number);
-      return tx
-        .send(txOptions)
-        .on('transactionHash', function(transactionHash) {
-          console.log('\t - transaction hash:', transactionHash);
-        })
-        .on('receipt', function(receipt) {
-          console.log('\t - Receipt:\n\x1b[2m', JSON.stringify(receipt), '\x1b[0m\n');
-        })
-        .on('error', function(error) {
-          console.log('\t !! Error !!', error, '\n\t !! ERROR !!\n');
-          return Promise.reject(error);
-        });
+      return tx;
     });
   }
 
