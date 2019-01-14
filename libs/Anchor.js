@@ -1,7 +1,7 @@
 'use strict';
 
 const Web3 = require('web3');
-const MosaicTbd = require('mosaic-tbd');
+const MosaicTbd = require('@openstfoundation/mosaic-tbd');
 const AbiBinProvider = MosaicTbd.AbiBinProvider;
 const ContractName = 'Anchor';
 
@@ -55,19 +55,9 @@ class Anchor {
   anchorStateRoot(block, txOptions) {
     const oThis = this;
 
-    txOptions = Object.assign(
-      {
-        gasPrice: '0x5B9ACA00',
-        gas: '1000000',
-        from: oThis.organization
-      },
-      oThis.txOptions || {},
-      txOptions || {}
-    );
-
     return oThis._anchorStateRoot(block, txOptions).then(function(tx) {
       return tx
-        .send(txOptions)
+        .send(tx.txOptions)
         .on('transactionHash', function(transactionHash) {
           console.log('\t - transaction hash:', transactionHash);
         })
@@ -111,6 +101,7 @@ class Anchor {
 
     return promiseChain.then(function(block) {
       let tx = contract.methods.anchorStateRoot(block.number, block.stateRoot);
+      tx.txOptions = txOptions;
       return tx;
     });
   }

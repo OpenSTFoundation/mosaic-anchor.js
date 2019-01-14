@@ -3,7 +3,7 @@
 // Load external packages
 const chai = require('chai'),
   Web3 = require('web3'),
-  MosaicTbd = require('mosaic-tbd'),
+  MosaicTbd = require('@openstfoundation/mosaic-tbd'),
   OrganizationHelper = MosaicTbd.ChainSetup.OrganizationHelper,
   AnchorHelper = MosaicTbd.ChainSetup.AnchorHelper,
   assert = chai.assert;
